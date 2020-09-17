@@ -29,10 +29,10 @@ def locate(img_src, img_mask):
             if np.mean(img_cut_mask) >= 75 and w > 15 and h > 15:
                 rect = cv2.minAreaRect(cont)  # 针对坐标点获取带方向角的最小外接矩形，中心点坐标，宽高，旋转角度
                 box = cv2.boxPoints(rect).astype(np.int32)  # 获取最小外接矩形四个顶点坐标
-                # cv2.drawContours(img_mask, contours, -1, (0, 0, 255), 2)
-                # cv2.drawContours(img_mask, [box], 0, (0, 255, 0), 2)
+                cv2.drawContours(img_mask, contours, -1, (0, 0, 255), 2)
+                cv2.drawContours(img_mask, [box], 0, (0, 255, 0), 2)
                 # cv2.imshow('img_mask',img_mask)
-                # cv2.waitKey(0)
+                cv2.waitKey(0)
                 cont = cont.reshape(-1, 2).tolist()
                 # 由于转换矩阵的两组坐标位置需要一一对应，因此需要将最小外接矩形的坐标进行排序，最终排序为[左上，左下，右上，右下]
                 box = sorted(box, key=lambda xy: xy[0])  # 先按照左右进行排序，分为左侧的坐标和右侧的坐标
@@ -68,7 +68,7 @@ def locate(img_src, img_mask):
                     dis2 = (x - x2) ** 2 + (y - y2) ** 2
                     dis3 = (x - x3) ** 2 + (y - y3) ** 2
                     d_up, d_down = point_to_line_distance(x, y)
-                    weight = 0.975
+                    weight = 0.987
                     if weight * d_up + (1 - weight) * dis0 < d0:  # 小于则更新
                         d0 = weight * d_up + (1 - weight) * dis0
                         l0 = (x, y)
@@ -87,5 +87,24 @@ def locate(img_src, img_mask):
                 #     cv2.circle(img=img_mask, color=(0, 255, 255), center=tuple(l), thickness=2, radius=2)
                 # cv2.imshow('img_mask',img_mask)
                 # cv2.waitKey(0)
-                cv2.drawContours(img_src_copy, [np.array([l0, l1, l3, l2])], -1, (0, 255, 0), 2)  # 在img_src_copy上绘制出定位的车牌轮廓，(0, 255, 0)表示绘制线条为绿色
+                cv2.drawContours(img_src_copy, [np.array([l0, l1, l3, l2])], -1, (0, 255, 0), 1)  # 在img_src_copy上绘制出定位的车牌轮廓，(0, 255, 0)表示绘制线条为绿色
     return img_src_copy
+def erode(image):
+   # print(image.shape)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ret, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    #cv.imshow("binary", binary)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))#定义结构元素的形状和大小
+    dst = cv2.erode(binary, kernel)#腐蚀操作
+    # cv2.imshow("erode_demo", dst)
+    return dst
+
+def dilate(image):
+    print(image.shape)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ret, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    #cv.imshow("binary", binary)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))#定义结构元素的形状和大小
+    dst = cv2.dilate(binary, kernel)#膨胀操作
+    # cv2.imshow("dilate_demo", dst)
+    return dst
